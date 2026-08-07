@@ -3,7 +3,8 @@
   const H = 600;
   const GRAVITY = 0.2;
   const FLAP = -7.2;
-  const PIPE_GAP = 350;
+  const PIPE_GAP_START = 200;
+  const PIPE_GAP_MIN = 115;
   const PIPE_W = 30;
   const PIPE_SPEED = 2;
   const BIRD_X = 90;
@@ -234,11 +235,14 @@
   }
 
   function spawnPipe(x = W + 40) {
-    const top = 70 + Math.random() * (GROUND - PIPE_GAP - 140);
+    const gap = pipeGap();
+    const margin = 55;
+    const range = Math.max(24, GROUND - gap - margin * 2);
+    const top = margin + Math.random() * range;
     pipes.push({
       x,
       top,
-      bottom: top + PIPE_GAP,
+      bottom: top + gap,
       scored: false,
     });
   }
@@ -300,13 +304,43 @@
   }
 
   function difficulty() {
-    return Math.min(1, score / 55);
+    // 0 → ~1 bei Score 36, soft-cap ~1.3
+    return Math.min(1.3, score / 36);
+  }
+
+  function progress() {
+    // 0–1 für Flug-Skalierung (etwas langsamer als Minispiele)
+    return Math.min(1, score / 45);
+  }
+
+  function pipeGap() {
+    const t = progress();
+    const e = t * t;
+    return Math.round(PIPE_GAP_START - e * (PIPE_GAP_START - PIPE_GAP_MIN));
+  }
+
+  function currentPipeSpeed() {
+    return PIPE_SPEED + progress() * 2.4;
+  }
+
+  function pipeSpacing() {
+    return Math.round(230 - progress() * 60);
+  }
+
+  function currentGravity() {
+    return GRAVITY + progress() * 0.07;
+  }
+
+  function saveInterval() {
+    if (score >= 30) return 3;
+    if (score >= 15) return 4;
+    return SAVE_EVERY;
   }
 
   function ballDurationForScore(s) {
     const base = 280;
-    const perPoint = 2;
-    return Math.max(120, Math.round(base - s * perPoint));
+    const perPoint = 2.6;
+    return Math.max(95, Math.round(base - s * perPoint));
   }
 
   function setMiniCopy(type, overrides = {}) {
@@ -355,7 +389,7 @@
         t: 0,
         duration: ballDurationForScore(score),
         keeperX: 0,
-        targetX: side * (60 + Math.random() * 40),
+        targetX: side * (60 + Math.random() * 40 + d * 25),
         ballY: 40,
         ballX: 0,
         dive: 0,
@@ -367,7 +401,7 @@
         aimX: 0,
         power: 0.2,
         powerDir: 1,
-        powerSpeed: 0.01 + d * 0.01,
+        powerSpeed: 0.01 + d * 0.018,
         ballX: 180,
         ballY: 240,
         vx: 0,
@@ -376,23 +410,23 @@
         hoopY: 70,
       };
     } else if (type === "baseball") {
-      const duration = Math.max(100, Math.round(150 - d * 30));
+      const duration = Math.max(85, Math.round(150 - d * 42));
       const windowStart = 0.58 + Math.random() * 0.08;
       saveState = {
         ...base,
         t: 0,
         duration,
         windowStart,
-        windowEnd: windowStart + (0.24 - d * 0.05),
+        windowEnd: windowStart + Math.max(0.12, 0.24 - d * 0.08),
         swung: false,
         batAngle: 0,
       };
     } else if (type === "judo") {
-      const judoTime = 300; // 5 Sekunden bei 60 fps
+      const judoTime = Math.max(210, Math.round(300 - d * 70));
       saveState = {
         ...base,
         taps: 0,
-        needed: Math.round(10 + d * 8),
+        needed: Math.round(10 + d * 14),
         time: judoTime,
         maxTime: judoTime,
         pulse: 0,
@@ -404,8 +438,9 @@
         phase: "aim",
         angle: Math.random() * Math.PI * 2,
         radius: 0,
-        spin: 0.035 + d * 0.03,
-        wobble: 32 + d * 18,
+        spin: 0.035 + d * 0.045,
+        wobble: 32 + d * 26,
+        hitR: Math.max(16, 38 - d * 18),
         dartX: 180,
         dartY: 140,
       };
@@ -431,7 +466,7 @@
         aimX: 0,
         power: 0.25,
         powerDir: 1,
-        powerSpeed: 0.011 + d * 0.008,
+        powerSpeed: 0.011 + d * 0.014,
         ballX: 180,
         ballY: 250,
         vx: 0,
@@ -455,7 +490,7 @@
       saveState = {
         ...base,
         phase: "aim",
-        aimX: (Math.random() - 0.5) * 28,
+        aimX: (Math.random() - 0.5) * (28 + d * 16),
         ballX: 180,
         ballY: 250,
         vx: 0,
@@ -464,15 +499,15 @@
         drift: 0,
       };
     } else if (type === "fart") {
-      const zoneW = Math.max(42, 95 - d * 28);
+      const zoneW = Math.max(34, 95 - d * 40);
       saveState = {
         ...base,
         hits: 0,
-        needed: 2,
+        needed: Math.min(4, 2 + Math.floor(d * 2)),
         zoneX: 80,
         zoneW,
         zoneDir: 1,
-        zoneSpeed: 1.1 + d * 1.1,
+        zoneSpeed: 1.1 + d * 1.6,
         needle: 180,
         feedback: 0,
         lastResult: "",
@@ -511,7 +546,7 @@
         saveScreen.hidden = true;
         mode = "play";
         hud.hidden = false;
-        pendingSaveAt = score + SAVE_EVERY;
+        pendingSaveAt = score + saveInterval();
         loop();
         return;
       }
@@ -1268,7 +1303,7 @@
       const dx = s.dartX - 180;
       const dy = s.dartY - 140;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const ok = dist < 38;
+      const ok = dist < (s.hitR || 38);
       setTimeout(() => resolveSave(ok, ok ? "BULLSEYE!" : "DANEBEN!"), 350);
       return;
     }
@@ -1284,7 +1319,7 @@
       s.phase = "roll";
       s.ballX = 180 + s.aimX;
       s.vx = s.aimX * 0.04;
-      s.drift = (Math.random() - 0.5) * (0.15 + difficulty() * 0.3);
+      s.drift = (Math.random() - 0.5) * (0.15 + difficulty() * 0.55);
       return;
     }
 
@@ -1465,7 +1500,7 @@
       bird.vy = 0;
       bird.rot = 0;
     } else {
-      bird.vy += GRAVITY;
+      bird.vy += currentGravity();
       bird.y += bird.vy;
       bird.rot = Math.max(-0.6, Math.min(1.1, bird.vy * 0.06));
     }
@@ -1487,8 +1522,9 @@
       return;
     }
 
+    const speed = currentPipeSpeed();
     for (const p of pipes) {
-      p.x -= PIPE_SPEED;
+      p.x -= speed;
       if (!p.scored && p.x + PIPE_W < BIRD_X) {
         p.scored = true;
         score += 1;
@@ -1507,7 +1543,7 @@
     }
 
     pipes = pipes.filter((p) => p.x > -PIPE_W - 10);
-    if (pipes.length && pipes[pipes.length - 1].x < W - 220) {
+    if (pipes.length && pipes[pipes.length - 1].x < W - pipeSpacing()) {
       spawnPipe();
     }
   }
