@@ -116,6 +116,8 @@
   let scareTimer = 0;
   let scareDone = false;
   let resumeAfterScare = null;
+  let maxCheat = false;
+  let cheatBuf = "";
 
   const playerImg = new Image();
   playerImg.src = "assets/images/player.png";
@@ -136,9 +138,17 @@
   }
 
   function armJumpscare() {
+    // Selten: nur ~12% Chance pro Runde, und dann erst nach langer Zeit
+    if (Math.random() > 0.12) {
+      scareArmed = false;
+      scareDone = true;
+      scareTimer = 0;
+      return;
+    }
     scareArmed = true;
     scareDone = false;
-    scareTimer = 360 + Math.floor(Math.random() * 480);
+    // ~90–180 Sekunden bei 60 fps
+    scareTimer = 5400 + Math.floor(Math.random() * 5400);
   }
 
   function triggerJumpscare(after) {
@@ -185,14 +195,16 @@
   function resetPlay() {
     bird = {
       y: H / 2,
-      vy: 0,
-      rot: 0,
+      vy: FLAP,
+      rot: -0.35,
       r: 22,
     };
     pipes = [];
     score = 0;
     frame = 0;
     pendingSaveAt = SAVE_EVERY;
+    maxCheat = false;
+    cheatBuf = "";
     scoreEl.textContent = "0";
     spawnPipe();
     spawnPipe(W + 220);
@@ -201,6 +213,24 @@
       { x: 220, y: 110, s: 0.7 },
       { x: 320, y: 55, s: 0.9 },
     ];
+  }
+
+  function tryMaxCheat(code) {
+    if (mode !== "play" || maxCheat) return;
+    const map = { KeyM: "M", KeyA: "A", KeyX: "X" };
+    const ch = map[code];
+    if (!ch) {
+      cheatBuf = "";
+      return;
+    }
+    cheatBuf = (cheatBuf + ch).slice(-3);
+    if (cheatBuf === "MAX") {
+      maxCheat = true;
+      cheatBuf = "";
+      bird.y = H / 2;
+      bird.vy = 0;
+      bird.rot = 0;
+    }
   }
 
   function spawnPipe(x = W + 40) {
@@ -252,10 +282,7 @@
 
   function gameOver() {
     cancelAnimationFrame(raf);
-    if (!scareDone) {
-      triggerJumpscare(() => showGameOver());
-      return;
-    }
+    scareArmed = false;
     showGameOver();
   }
 
@@ -361,12 +388,13 @@
         batAngle: 0,
       };
     } else if (type === "judo") {
+      const judoTime = 300; // 5 Sekunden bei 60 fps
       saveState = {
         ...base,
         taps: 0,
         needed: Math.round(10 + d * 8),
-        time: Math.round(220 - d * 40),
-        maxTime: Math.round(220 - d * 40),
+        time: judoTime,
+        maxTime: judoTime,
         pulse: 0,
         opponentLean: 0,
       };
@@ -1432,9 +1460,15 @@
 
   function updatePlay() {
     frame += 1;
-    bird.vy += GRAVITY;
-    bird.y += bird.vy;
-    bird.rot = Math.max(-0.6, Math.min(1.1, bird.vy * 0.06));
+    if (maxCheat) {
+      bird.y = H / 2;
+      bird.vy = 0;
+      bird.rot = 0;
+    } else {
+      bird.vy += GRAVITY;
+      bird.y += bird.vy;
+      bird.rot = Math.max(-0.6, Math.min(1.1, bird.vy * 0.06));
+    }
 
     if (scareArmed && !scareDone) {
       scareTimer -= 1;
@@ -1448,7 +1482,7 @@
       }
     }
 
-    if (bird.y + bird.r > GROUND || bird.y - bird.r < 0) {
+    if (!maxCheat && (bird.y + bird.r > GROUND || bird.y - bird.r < 0)) {
       gameOver();
       return;
     }
@@ -1466,7 +1500,7 @@
           return;
         }
       }
-      if (hitPipe(p)) {
+      if (!maxCheat && hitPipe(p)) {
         gameOver();
         return;
       }
@@ -1564,6 +1598,7 @@
       e.preventDefault();
       return;
     }
+    if (mode === "play") tryMaxCheat(e.code);
     if (e.code === "Space" || e.code === "ArrowUp") {
       e.preventDefault();
       if (mode === "start" || mode === "over") startGame();
