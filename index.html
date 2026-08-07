@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manuel Neuerer Bird — Flappy Keeper</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="stadium">
+    <div class="stadium__glow"></div>
+    <div class="stadium__crowd" aria-hidden="true"></div>
+
+    <header class="brand">
+      <p class="brand__mark">NEUER BIRD</p>
+      <p class="brand__tag">Flappy Keeper</p>
+    </header>
+
+    <main class="stage">
+      <canvas id="game" width="400" height="600" aria-label="Flappy Bird mit Manuel Neuer"></canvas>
+
+      <div id="hud" class="hud" hidden>
+        <span id="score">0</span>
+        <span class="hud__hint">Leertaste / Klick = Flattern</span>
+      </div>
+
+      <div id="gate-screen" class="overlay overlay--gate">
+        <p class="overlay__eyebrow">ZUTRITT</p>
+        <h1 class="overlay__brand">Bist du Manuel Neuer?</h1>
+        <p class="overlay__lead">Nur der Nummer-1-Keeper darf anpfiffen.</p>
+        <div class="overlay__actions">
+          <button type="button" id="btn-gate-yes" class="btn">Ja</button>
+          <button type="button" id="btn-gate-no" class="btn btn--ghost">Nein</button>
+        </div>
+      </div>
+
+      <div id="start-screen" class="overlay overlay--start" hidden>
+        <h1 class="overlay__brand">NEUER BIRD</h1>
+        <p class="overlay__lead">Flatter durch die Pfosten. Alle 5 Punkte: zufälliges Minispiel.</p>
+        <button type="button" id="btn-start" class="btn">Anpfiff</button>
+        <p class="overlay__keys">Leertaste · Klick · Touch</p>
+      </div>
+
+      <div id="save-screen" class="overlay overlay--save" hidden>
+        <p class="overlay__eyebrow" id="mini-eyebrow">MINISPIEL</p>
+        <h2 class="overlay__title" id="mini-title">Bereit?</h2>
+        <canvas id="save-canvas" width="360" height="280" aria-label="Minispiel"></canvas>
+        <p class="overlay__keys" id="mini-keys">Leertaste · Klick · Touch</p>
+      </div>
+
+      <div id="gameover-screen" class="overlay overlay--over" hidden>
+        <p class="overlay__eyebrow">ABGEPFIFFEN</p>
+        <h2 class="overlay__title">Spiel vorbei</h2>
+        <p class="overlay__score">Punkte: <strong id="final-score">0</strong></p>
+        <p class="overlay__best">Bestleistung: <strong id="best-score">0</strong></p>
+        <button type="button" id="btn-retry" class="btn">Nochmal</button>
+      </div>
+    </main>
+  </div>
+
+  <div id="jumpscare" class="jumpscare" hidden aria-hidden="true">
+    <img src="assets/images/jumpscare.png" alt="" class="jumpscare__img" draggable="false" />
+  </div>
+
+  <audio id="bg-audio" src="assets/audio/Background.mp3" loop preload="auto"></audio>
+  <audio id="scare-audio" src="assets/audio/Jumpscare.mp3" preload="auto"></audio>
+
+  <script src="game.js"></script>
+</body>
+</html>
