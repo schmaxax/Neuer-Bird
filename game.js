@@ -53,41 +53,57 @@
       eyebrow: "ELFMETER",
       title: "Halt den Ball, Manuel!",
       keys: "Maus bewegen · Touch · ← → / A D",
+      explain:
+        "Bewege die Maus (oder ← →), damit Manuel den Ball hält. Bleib nah am Ball, bis er ankommt.",
     },
     basketball: {
       eyebrow: "BASKETBALL",
       title: "Wirf den Korb!",
       keys: "← → zielen · Leertaste / Klick = werfen",
+      explain:
+        "Ziele mit ← → oder der Maus. Die Power-Leiste schwankt — wirf mit Leertaste oder Klick, wenn die Kraft passt.",
     },
     baseball: {
       eyebrow: "BASEBALL",
       title: "Schlag den Ball!",
       keys: "Leertaste / Klick im grünen Fenster",
+      explain:
+        "Der Ball fliegt auf dich zu. Schlage mit Leertaste oder Klick genau im grünen Timing-Fenster.",
     },
     judo: {
       eyebrow: "JUDO",
       title: "Wirf ihn um!",
       keys: "Leertaste / Klick so schnell wie möglich",
+      explain:
+        "Drücke Leertaste oder klicke so oft wie möglich, bevor die Zeit abläuft — wirf den Gegner um!",
     },
     dart: {
       eyebrow: "DART",
       title: "Bullseye, Manuel!",
       keys: "Leertaste / Klick wenn nah am Zentrum",
+      explain:
+        "Der Dart kreist um die Scheibe. Drücke Leertaste oder klicke, wenn er nah am Zentrum ist.",
     },
     cans: {
       eyebrow: "DOSENWERFEN",
       title: "Alle Dosen um!",
       keys: "← → zielen · Leertaste / Klick = werfen",
+      explain:
+        "Ziele mit ← → oder der Maus und wirf mit Leertaste oder Klick. Alle Dosen müssen fallen.",
     },
     bowling: {
       eyebrow: "BOWLING",
       title: "Strike!",
       keys: "← → zielen · Leertaste / Klick = rollen",
+      explain:
+        "Ziele die Bahn an und rolle mit Leertaste oder Klick. Alle Pins müssen fallen (Strike).",
     },
     fart: {
       eyebrow: "NOTFALL",
       title: "Furzen — nicht kacken!",
       keys: "Leertaste / Klick im grünen Feld",
+      explain:
+        "Die Nadel steht fest, das grüne Feld bewegt sich. Klicke oder drücke Leertaste nur im grünen Bereich.",
     },
   };
 
@@ -257,13 +273,13 @@
   }
 
   function difficulty() {
-    return Math.min(1, score / 40);
+    return Math.min(1, score / 55);
   }
 
   function ballDurationForScore(s) {
-    const base = 200;
-    const perPoint = 3.2;
-    return Math.max(70, Math.round(base - s * perPoint));
+    const base = 280;
+    const perPoint = 2;
+    return Math.max(120, Math.round(base - s * perPoint));
   }
 
   function setMiniCopy(type, overrides = {}) {
@@ -277,13 +293,22 @@
     return MINI_TYPES[Math.floor(Math.random() * MINI_TYPES.length)];
   }
 
+  function dismissHowto() {
+    if (!saveState || !saveState.howto || saveState.resolved) return;
+    saveState.howto = false;
+    setMiniCopy(saveState.type);
+  }
+
   function beginSaveChallenge() {
     mode = "save";
     saveScreen.hidden = false;
     hud.hidden = true;
 
     const type = pickMinigame();
-    setMiniCopy(type);
+    setMiniCopy(type, {
+      title: "So geht’s",
+      keys: "Klick / Leertaste = Start",
+    });
 
     const d = difficulty();
     const base = {
@@ -293,6 +318,7 @@
       flash: 0,
       countdown: 0,
       message: "",
+      howto: true,
     };
 
     if (type === "penalty") {
@@ -302,7 +328,7 @@
         t: 0,
         duration: ballDurationForScore(score),
         keeperX: 0,
-        targetX: side * (70 + Math.random() * 50),
+        targetX: side * (60 + Math.random() * 40),
         ballY: 40,
         ballX: 0,
         dive: 0,
@@ -314,23 +340,23 @@
         aimX: 0,
         power: 0.2,
         powerDir: 1,
-        powerSpeed: 0.018 + d * 0.02,
+        powerSpeed: 0.01 + d * 0.01,
         ballX: 180,
         ballY: 240,
         vx: 0,
         vy: 0,
-        hoopX: 140 + Math.random() * 80,
+        hoopX: 150 + Math.random() * 60,
         hoopY: 70,
       };
     } else if (type === "baseball") {
-      const duration = Math.max(55, Math.round(95 - d * 35));
-      const windowStart = 0.62 + Math.random() * 0.08;
+      const duration = Math.max(100, Math.round(150 - d * 30));
+      const windowStart = 0.58 + Math.random() * 0.08;
       saveState = {
         ...base,
         t: 0,
         duration,
         windowStart,
-        windowEnd: windowStart + (0.16 - d * 0.05),
+        windowEnd: windowStart + (0.24 - d * 0.05),
         swung: false,
         batAngle: 0,
       };
@@ -338,9 +364,9 @@
       saveState = {
         ...base,
         taps: 0,
-        needed: Math.round(18 + d * 16),
-        time: Math.round(150 - d * 35),
-        maxTime: Math.round(150 - d * 35),
+        needed: Math.round(10 + d * 8),
+        time: Math.round(220 - d * 40),
+        maxTime: Math.round(220 - d * 40),
         pulse: 0,
         opponentLean: 0,
       };
@@ -350,8 +376,8 @@
         phase: "aim",
         angle: Math.random() * Math.PI * 2,
         radius: 0,
-        spin: 0.07 + d * 0.05,
-        wobble: 55 + d * 25,
+        spin: 0.035 + d * 0.03,
+        wobble: 32 + d * 18,
         dartX: 180,
         dartY: 140,
       };
@@ -377,7 +403,7 @@
         aimX: 0,
         power: 0.25,
         powerDir: 1,
-        powerSpeed: 0.02 + d * 0.015,
+        powerSpeed: 0.011 + d * 0.008,
         ballX: 180,
         ballY: 250,
         vx: 0,
@@ -401,7 +427,7 @@
       saveState = {
         ...base,
         phase: "aim",
-        aimX: (Math.random() - 0.5) * 40,
+        aimX: (Math.random() - 0.5) * 28,
         ballX: 180,
         ballY: 250,
         vx: 0,
@@ -410,15 +436,15 @@
         drift: 0,
       };
     } else if (type === "fart") {
-      const zoneW = Math.max(28, 70 - d * 30);
+      const zoneW = Math.max(42, 95 - d * 28);
       saveState = {
         ...base,
         hits: 0,
-        needed: 3,
+        needed: 2,
         zoneX: 80,
         zoneW,
         zoneDir: 1,
-        zoneSpeed: 2.2 + d * 2.2,
+        zoneSpeed: 1.1 + d * 1.1,
         needle: 180,
         feedback: 0,
         lastResult: "",
@@ -478,7 +504,7 @@
 
     if (s.t >= s.duration) {
       const reach = Math.abs(s.keeperX - s.targetX);
-      const saved = reach < 48;
+      const saved = reach < 62;
       if (saved) s.dive = Math.sign(s.targetX) || 1;
       resolveSave(saved, saved ? "GEHALTEN!" : "TOR!");
     }
@@ -504,9 +530,9 @@
       s.ballY += s.vy;
 
       const rimY = s.hoopY + 18;
-      const inX = Math.abs(s.ballX - s.hoopX) < 22;
+      const inX = Math.abs(s.ballX - s.hoopX) < 28;
       const crossing =
-        s.vy > 0 && s.ballY >= rimY - 8 && s.ballY <= rimY + 14;
+        s.vy > 0 && s.ballY >= rimY - 10 && s.ballY <= rimY + 16;
       if (inX && crossing) {
         s.phase = "done";
         resolveSave(true, "KORB!");
@@ -668,7 +694,7 @@
 
   function updateSave() {
     const s = saveState;
-    if (!s || s.resolved) return;
+    if (!s || s.resolved || s.howto) return;
 
     switch (s.type) {
       case "penalty":
@@ -739,6 +765,52 @@
     // sweet zone marker
     c.fillStyle = "rgba(247,244,239,0.35)";
     c.fillRect(x - 2, y + h * 0.2, w + 4, h * 0.25);
+  }
+
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = String(text).split(" ");
+    let line = "";
+    let yy = y;
+    for (const word of words) {
+      const test = line ? `${line} ${word}` : word;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        ctx.fillText(line, x, yy);
+        line = word;
+        yy += lineHeight;
+      } else {
+        line = test;
+      }
+    }
+    if (line) {
+      ctx.fillText(line, x, yy);
+      yy += lineHeight;
+    }
+    return yy;
+  }
+
+  function drawHowtoOverlay(s, sw, sh) {
+    if (!s.howto) return;
+    const meta = MINI_META[s.type] || MINI_META.penalty;
+    const cx = sw / 2;
+
+    saveCtx.fillStyle = "rgba(7, 16, 24, 0.82)";
+    saveCtx.fillRect(0, 0, sw, sh);
+
+    saveCtx.fillStyle = "rgba(232, 197, 71, 0.95)";
+    saveCtx.font = '700 14px "DM Sans", sans-serif';
+    saveCtx.textAlign = "center";
+    saveCtx.fillText("ERKLÄRUNG", cx, 48);
+
+    saveCtx.fillStyle = "#f7f4ef";
+    saveCtx.font = '700 28px "Bebas Neue", sans-serif';
+    saveCtx.fillText(meta.title, cx, 82);
+
+    saveCtx.font = '600 15px "DM Sans", sans-serif';
+    wrapText(saveCtx, meta.explain, cx, 118, sw - 56, 22);
+
+    saveCtx.fillStyle = "rgba(232, 197, 71, 0.95)";
+    saveCtx.font = '700 18px "Bebas Neue", sans-serif';
+    saveCtx.fillText("KLICK / LEERTASTE = WEITER", cx, sh - 36);
   }
 
   function drawResultOverlay(s, sw, sh) {
@@ -1126,6 +1198,7 @@
     }
 
     drawResultOverlay(s, saveCanvas.width, saveCanvas.height);
+    drawHowtoOverlay(s, saveCanvas.width, saveCanvas.height);
   }
 
   // ——— Input for minigames ———
@@ -1133,6 +1206,10 @@
   function miniAction() {
     const s = saveState;
     if (!s || s.resolved || mode !== "save") return;
+    if (s.howto) {
+      dismissHowto();
+      return;
+    }
 
     if (s.type === "basketball" && s.phase === "aim") {
       s.phase = "fly";
@@ -1163,7 +1240,7 @@
       const dx = s.dartX - 180;
       const dy = s.dartY - 140;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      const ok = dist < 28;
+      const ok = dist < 38;
       setTimeout(() => resolveSave(ok, ok ? "BULLSEYE!" : "DANEBEN!"), 350);
       return;
     }
@@ -1179,7 +1256,7 @@
       s.phase = "roll";
       s.ballX = 180 + s.aimX;
       s.vx = s.aimX * 0.04;
-      s.drift = (Math.random() - 0.5) * (0.4 + difficulty() * 0.6);
+      s.drift = (Math.random() - 0.5) * (0.15 + difficulty() * 0.3);
       return;
     }
 
@@ -1191,8 +1268,8 @@
       if (inZone) {
         s.hits += 1;
         s.lastResult = "FURZ!";
-        s.zoneSpeed += 0.35;
-        s.zoneW = Math.max(22, s.zoneW - 4);
+        s.zoneSpeed += 0.18;
+        s.zoneW = Math.max(34, s.zoneW - 3);
         if (s.hits >= s.needed) {
           setTimeout(() => resolveSave(true, "ERLEICHTERT!"), 400);
         }
@@ -1205,7 +1282,7 @@
 
   function miniMoveAim(dir) {
     const s = saveState;
-    if (!s || s.resolved || mode !== "save") return;
+    if (!s || s.resolved || s.howto || mode !== "save") return;
 
     if (s.type === "penalty") {
       s.keeperX = Math.max(-110, Math.min(110, s.keeperX + dir * 18));
@@ -1222,7 +1299,7 @@
   }
 
   function setKeeperFromClientX(clientX) {
-    if (mode !== "save" || !saveState || saveState.resolved) return;
+    if (mode !== "save" || !saveState || saveState.resolved || saveState.howto) return;
     const s = saveState;
     const rect = saveCanvas.getBoundingClientRect();
     const scaleX = saveCanvas.width / rect.width;
@@ -1441,6 +1518,10 @@
     }
     if (mode === "save" && saveState && !saveState.resolved) {
       e.preventDefault();
+      if (saveState.howto) {
+        dismissHowto();
+        return;
+      }
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const aimThrow = ["basketball", "cans", "bowling"];
       const aimOnly = ["penalty", ...aimThrow];
@@ -1457,6 +1538,11 @@
 
   function onPointerUp(e) {
     if (mode !== "save" || !saveState || saveState.resolved) return;
+    if (saveState.howto) {
+      e.preventDefault();
+      dismissHowto();
+      return;
+    }
     const aimThrow = ["basketball", "cans", "bowling"];
     if (!aimThrow.includes(saveState.type)) return;
     if (!e.changedTouches) return;
@@ -1465,7 +1551,7 @@
   }
 
   function onPointerMove(e) {
-    if (mode !== "save" || !saveState || saveState.resolved) return;
+    if (mode !== "save" || !saveState || saveState.resolved || saveState.howto) return;
     const aimTypes = ["penalty", "basketball", "cans", "bowling"];
     if (!aimTypes.includes(saveState.type)) return;
     e.preventDefault();
@@ -1503,6 +1589,12 @@
   saveCanvas.addEventListener("touchstart", onPointer, { passive: false });
   saveCanvas.addEventListener("touchmove", onPointerMove, { passive: false });
   saveCanvas.addEventListener("touchend", onPointerUp, { passive: false });
+
+  saveScreen.addEventListener("click", (e) => {
+    if (mode !== "save" || !saveState || !saveState.howto) return;
+    if (e.target === saveCanvas) return;
+    dismissHowto();
+  });
 
   btnGateYes.addEventListener("click", passGate);
   btnGateNo.addEventListener("click", denyGate);
